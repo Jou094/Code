@@ -4,9 +4,9 @@ This sample blog app is created with TypeScript, React, Vite, Redux, and Supabas
 
 ## Table of Contents
 
--[Installation](#installation)
+- [Installation](#installation)
 
--[Environment Setup](#environment)
+- [Environment Setup](#environment-setup)
 
 ## Installation
 
@@ -28,7 +28,7 @@ This will install all required dependencies including:
 - TypeScript
 
 ### Environment Setup
--Set environment variables in .env file in the root directory or via command line.
+Set environment variables in .env file in the root directory or via command line.
 ```bash
 VITE_SUPABASE_URL=your_supabase_url_here
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
