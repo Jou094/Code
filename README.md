@@ -1,19 +1,19 @@
-#Blog App
+# Blog App
 
 This sample blog app is created with TypeScript, React, Vite, Redux, and Supabase.
 
-##Table of Contents
+## Table of Contents
 
 -Installation(#installation)
 -Environment Setup(#environment)
 
-##Installation
+## Installation
 
-###Prerequisites
+### Prerequisites
 - Node.js (>= 18.0.0)
 - npm or yarn
 
-###Install Dependencies
+### Install Dependencies
 ```
 npm install
 ```
@@ -26,7 +26,7 @@ This will install all required dependencies including:
 - Tailwind CSS v4
 - TypeScript
 
-###Environment Setup
+### Environment Setup
 -Set environment variables in .env file in the root directory or via command line.
 ```bash
 VITE_SUPABASE_URL=your_supabase_url_here
