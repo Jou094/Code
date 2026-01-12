@@ -9,7 +9,7 @@ interface BlogFormProps {
   onSuccess?: () => void;
   isEdit?: boolean;
   onSubmitEdit?: (title: string, content: string) => void;
-  onCreated?: (id: number) => void;
+  onCreated?: (id: string) => void;
   onCancel?: () => void;
 }
 
@@ -37,7 +37,7 @@ const BlogForm: React.FC<BlogFormProps> = ({
         setTitle("");
         setContent("");
         if (onSuccess) onSuccess();
-        let blogId: number | undefined;
+        let blogId: string | undefined;
         if (result.payload) {
           if (Array.isArray(result.payload) && result.payload[0]?.id) {
             blogId = result.payload[0].id;
@@ -45,7 +45,7 @@ const BlogForm: React.FC<BlogFormProps> = ({
             typeof result.payload === "object" &&
             "id" in result.payload
           ) {
-            blogId = (result.payload as { id: number }).id;
+            blogId = (result.payload as { id: string }).id;
           }
         }
         if (onCreated && blogId) onCreated(blogId);
