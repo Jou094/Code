@@ -4,8 +4,8 @@ This sample blog app is created with TypeScript, React, Vite, Redux, and Supabas
 
 ## Table of Contents
 
--Installation(# installation)
--Environment Setup(# environment)
+-[Installation](#installation)
+-[Environment Setup](#environment)
 
 ## Installation
 
