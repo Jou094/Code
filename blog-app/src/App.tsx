@@ -210,6 +210,9 @@ const Blogs: React.FC = () => {
               key={blog.id || `temp-${index}`}
               className="bg-white rounded-xl shadow-md p-6 flex flex-col gap-2 transition hover:shadow-lg"
             >
+              <div className="flex gap-2">
+                  <Link to={`/blogs/${blog.id}`} className="px-4 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition font-semibold border border-blue-300 shadow-sm">View</Link>
+                </div>
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-xl font-bold text-blue-800">
                   {blog.title}
@@ -231,6 +234,15 @@ const Blogs: React.FC = () => {
                 )}
               </div>
               <p className="text-gray-700 mb-2">{blog.content}</p>
+                {blog.image_path && (
+                  <div className="mb-2">
+                    <img
+                      src={`https://hhlbfsrrjopwzmzmeltr.supabase.co/storage/v1/object/public/post-files/${blog.image_path}`}
+                      alt=""
+                      className="w-full max-h-[300px] object-contain rounded-lg border bg-gray-50"
+                    />
+                  </div>
+                )}
               <div className="flex justify-between items-center text-xs text-gray-400">
                 <span>By: {blog.email}</span>
                 <span>

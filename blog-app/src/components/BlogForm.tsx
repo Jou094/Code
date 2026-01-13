@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../app/store";
-import { createBlog } from "../app/blogSlice";
+import { createBlog } from "../app/blogSlice"; 
 
 interface BlogFormProps {
   initialTitle?: string;
   initialContent?: string;
+  initialFile?: File;
   onSuccess?: () => void;
   isEdit?: boolean;
-  onSubmitEdit?: (title: string, content: string) => void;
+  onSubmitEdit?: (title: string, content: string, file?: File) => void;
   onCreated?: (id: string) => void;
   onCancel?: () => void;
 }
@@ -16,6 +17,7 @@ interface BlogFormProps {
 const BlogForm: React.FC<BlogFormProps> = ({
   initialTitle = "",
   initialContent = "",
+  initialFile= undefined,
   onSuccess,
   isEdit = false,
   onSubmitEdit,
@@ -25,17 +27,20 @@ const BlogForm: React.FC<BlogFormProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
+  const [ file, setFile ] = useState(initialFile);
   const { status, error } = useSelector((state: RootState) => state.blog);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEdit && onSubmitEdit) {
-      onSubmitEdit(title, content);
+      onSubmitEdit(title, content, file);
     } else {
-      const result = await dispatch(createBlog({ title, content }));
+      const result = await dispatch(createBlog({ title, content, file: file, }));
       if (createBlog.fulfilled.match(result)) {
         setTitle("");
         setContent("");
+        setFile(undefined);
         if (onSuccess) onSuccess();
         let blogId: string | undefined;
         if (result.payload) {
@@ -80,6 +85,36 @@ const BlogForm: React.FC<BlogFormProps> = ({
         required
         className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 min-h-[120px] bg-gray-50"
       />
+      <div className="flex items-center gap-4">
+  <input
+    id="file-upload"
+    type="file"
+    accept="image/*"
+    onChange={(e) => setFile(e.target.files?.[0])}
+    className="hidden"
+  />
+  <label
+    htmlFor="file-upload"
+    className="
+      cursor-pointer
+      rounded-md
+      bg-blue-600
+      px-4
+      py-2
+      text-white
+      font-medium
+      hover:bg-blue-700
+      transition
+    "
+  >
+    Choose file
+    
+  </label>
+  <span className="text-sm text-gray-600">
+    {file ? file.name : 'No file chosen'}
+    
+  </span>
+</div>
       <div className="flex gap-2">
         <button
           type="submit"

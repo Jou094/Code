@@ -8,6 +8,7 @@ export interface Blog {
   content: string;
   user_id: string;
   email: string;
+  image_path?: string;
   created_at: string;
 }
 
@@ -37,20 +38,32 @@ export const fetchBlogs = createAsyncThunk(
 
 export const createBlog = createAsyncThunk<
   Blog,
-  { title: string; content: string },
+  { title: string; content: string; file?: File },
   { state: RootState; rejectValue: string }
 >(
   "blogs/createBlog",
-  async ({ title, content }, { getState, rejectWithValue }) => {
+  async ({ title, content, file }, { getState, rejectWithValue }) => {
     const { user } = getState().auth;
     if (!user || !user.id) {
       return rejectWithValue("Not authenticated or user has no ID");
     }
+
+    let image_path: string | null = null
+    if (file) {
+      // store only the path
+      image_path = `${user.id}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("post-files")
+        .upload(image_path, file);
+      if (uploadError) return rejectWithValue(uploadError.message);
+    }
+      
     const blogData = {
       title,
       content,
       user_id: user.id,
       email: user.email,
+      image_path,
     };
     const { data, error } = await supabase
       .from("posts")
@@ -67,18 +80,71 @@ export const createBlog = createAsyncThunk<
 export const updateBlog = createAsyncThunk(
   "blogs/updateBlog",
   async (
-    { id, title, content }: { id: string; title: string; content: string },
-    { rejectWithValue }
+    {
+      id,
+      title,
+      content,
+      file,
+      oldImagePath,
+    }: {
+      id: string;
+      title: string;
+      content: string;
+      file?: File;
+      oldImagePath?: string | null;
+    },
+    { getState, rejectWithValue }
   ) => {
-    const { data, error } = await supabase
-      .from("posts")
-      .update({ title, content })
-      .eq("id", id)
-      .select();
-    if (error) return rejectWithValue(error.message);
-    return data?.[0];
+    try {
+      const { user } = (getState() as RootState).auth;
+      if (!user || !user.id) {
+        return rejectWithValue("Not authenticated");
+      }
+
+      let newImagePath = oldImagePath ?? null;
+
+      if (file) {
+        // Use user.id consistently, just like in createBlog
+        const filePath = `${user.id}/${Date.now()}-${file.name}`;
+
+        // Delete old image FIRST if it exists
+        if (oldImagePath) {
+          await supabase.storage
+            .from("post-files")
+            .remove([oldImagePath])
+            .catch(() => {}); // ignore if not found
+        }
+
+        // Then upload the new file
+        const { error: uploadError } = await supabase.storage
+          .from("post-files")
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          return rejectWithValue(uploadError.message);
+        }
+
+        newImagePath = filePath;
+      }
+
+      // Update the post
+      const { data, error } = await supabase
+        .from("posts")
+        .update({ title, content, image_path: newImagePath })
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) return rejectWithValue(error.message);
+
+      return data;
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
   }
 );
+
 
 export const deleteBlog = createAsyncThunk(
   "blogs/deleteBlog",
@@ -121,5 +187,12 @@ const blogSlice = createSlice({
       });
   },
 });
+
+export const selectAllBlogs = (state: RootState) => state.blog.blogs;
+export const getPostsStatus = (state: RootState) => state.blog.status;
+export const getPostsError = (state: RootState) => state.blog.error;
+
+export const selectBlogById = (state: RootState, blogId: string) =>
+  state.blog.blogs.find((blog) => blog.id === blogId);
 
 export default blogSlice.reducer;

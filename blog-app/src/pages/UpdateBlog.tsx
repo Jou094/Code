@@ -31,10 +31,10 @@ const UpdateBlog: React.FC = () => {
     fetchBlog();
   }, [id]);
 
-  const handleEdit = async (title: string, content: string) => {
-    if (!id) return;
+  const handleEdit = async (title: string, content: string, file?: File) => {
+    if (!id || !blog) return;
     const result = await dispatch(
-      updateBlog({ id: String(id), title, content })
+      updateBlog({ id: String(id), title, content, file, oldImagePath: blog.image_path })
     );
     if (updateBlog.fulfilled.match(result)) {
       navigate("/blogs");
@@ -72,6 +72,7 @@ const UpdateBlog: React.FC = () => {
         isEdit
         initialTitle={blog.title}
         initialContent={blog.content}
+        initialFile={undefined}
         onSubmitEdit={handleEdit}
         onCancel={() => navigate("/blogs")}
       />
