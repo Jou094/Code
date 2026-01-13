@@ -73,6 +73,7 @@ const UpdateBlog: React.FC = () => {
         initialTitle={blog.title}
         initialContent={blog.content}
         initialFile={undefined}
+        initialImagePath={blog.image_path}
         onSubmitEdit={handleEdit}
         onCancel={() => navigate("/blogs")}
       />

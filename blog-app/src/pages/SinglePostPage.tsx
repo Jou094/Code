@@ -21,7 +21,7 @@ export default function SinglePostPage() {
         By {post.email} •{' '}
         {new Date(post.created_at).toLocaleDateString()}
       </p>
-
+      
       <p className="whitespace-pre-line">{post.content}</p>
 
     </div>
