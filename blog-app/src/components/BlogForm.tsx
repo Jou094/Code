@@ -11,7 +11,7 @@ interface BlogFormProps {
   initialImagePath?: string;
   onSuccess?: () => void;
   isEdit?: boolean;
-  onSubmitEdit?: (title: string, content: string, file?: File) => void;
+  onSubmitEdit?: (title: string, content: string, file?: File, shouldRemoveImage?: boolean) => void;
   onCreated?: (id: string) => void;
   onCancel?: () => void;
 }
@@ -32,6 +32,7 @@ const BlogForm: React.FC<BlogFormProps> = ({
   const [content, setContent] = useState(initialContent);
   const [ file, setFile ] = useState(initialFile);
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [shouldRemoveImage, setShouldRemoveImage] = useState(false);  
   const { status, error } = useSelector((state: RootState) => state.blog);
 
   React.useEffect(() => {
@@ -46,7 +47,12 @@ const BlogForm: React.FC<BlogFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isEdit && onSubmitEdit) {
-      onSubmitEdit(title, content, file);
+      console.log("BlogForm - Submitting edit:", { 
+        hasFile: !!file, 
+        shouldRemoveImage,
+        initialImagePath 
+      });
+      onSubmitEdit(title, content, file, shouldRemoveImage );
     } else {
       const result = await dispatch(createBlog({ title, content, file: file, }));
       if (createBlog.fulfilled.match(result)) {
@@ -80,12 +86,15 @@ const BlogForm: React.FC<BlogFormProps> = ({
       setFile(selectedFile);
       // Clear the existing image preview when a new file is selected
       setExistingImageUrl(null);
+      setShouldRemoveImage(false);
     }
   };
 
   const handleRemoveFile = () => {
     setFile(undefined);
     setExistingImageUrl(null);
+    setShouldRemoveImage(true);
+    console.log("File removed, shouldRemoveImage set to", true);
     // Reset the file input
     const fileInput = document.getElementById("file-upload") as HTMLInputElement;
     if (fileInput) fileInput.value = "";

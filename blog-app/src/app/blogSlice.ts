@@ -86,12 +86,14 @@ export const updateBlog = createAsyncThunk(
       content,
       file,
       oldImagePath,
+      shouldRemoveImage,
     }: {
       id: string;
       title: string;
       content: string;
       file?: File;
       oldImagePath?: string | null;
+      shouldRemoveImage?: boolean;
     },
     { getState, rejectWithValue }
   ) => {
@@ -102,8 +104,17 @@ export const updateBlog = createAsyncThunk(
       }
 
       let newImagePath = oldImagePath ?? null;
-
-      if (file) {
+      if (shouldRemoveImage) {
+        // Delete old image if it exists
+        if (oldImagePath) {
+          await supabase.storage
+            .from("post-files")
+            .remove([oldImagePath])
+            .catch(() => {}); // ignore if not found
+        }
+        newImagePath = null;
+      }
+      else if (file) {
         // Use user.id consistently, just like in createBlog
         const filePath = `${user.id}/${Date.now()}-${file.name}`;
 
