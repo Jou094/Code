@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -17,6 +17,7 @@ import DeleteBlog from "./pages/DeleteBlog";
 import UpdateBlog from "./pages/UpdateBlog";
 import CreateBlog from "./pages/CreateBlog";
 import BlogDetails from "./pages/BlogDetails";
+import { fetchCommentCounts, selectCommentCountByPost } from "./app/commentsSlice";
 
 const Account: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -147,15 +148,25 @@ const Blogs: React.FC = () => {
   const [page, setPage] = React.useState(1);
   const BLOGS_PER_PAGE = 4;
 
+  // Fetch blogs on mount
+  useEffect(() => {
+    dispatch(fetchBlogs());
+  }, [dispatch]);
+
+  // Fetch comment counts when blogs are loaded
+  useEffect(() => {
+    const allBlogs = blogs.filter((b) => b.id);
+    if (allBlogs.length > 0) {
+      const postIds = allBlogs.map(blog => blog.id);
+      dispatch(fetchCommentCounts(postIds));
+    }
+  }, [dispatch, blogs.length]);
+
   // Add logout handler for the blogs navbar
   const handleLogout = async () => {
     await dispatch(logout());
     navigate("/login");
   };
-
-  React.useEffect(() => {
-    if (user) dispatch(fetchBlogs());
-  }, [dispatch, user]);
 
   // Show all blogs from all users
   const allBlogs = blogs.filter((b) => b.id);
@@ -206,50 +217,7 @@ const Blogs: React.FC = () => {
             <p className="text-center text-gray-500">No blogs yet.</p>
           )}
           {paginatedBlogs.map((blog, index) => (
-            <div
-              key={blog.id || `temp-${index}`}
-              className="bg-white rounded-xl shadow-md p-6 flex flex-col gap-2 transition hover:shadow-lg"
-            >
-              <div className="flex gap-2">
-                  <Link to={`/blogs/${blog.id}`} className="px-4 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition font-semibold border border-blue-300 shadow-sm">View</Link>
-                </div>
-              <div className="flex justify-between items-center mb-2">
-                <h2 className="text-xl font-bold text-blue-800">
-                  {blog.title}
-                </h2>
-                {/* Only show edit/delete buttons if user is the author */}
-                {blog.user_id === user?.id && (
-                  <div className="flex gap-2">
-                    <Link to={`/blogs/update/${blog.id}`}>
-                      <button className="px-4 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition font-semibold border border-blue-300 shadow-sm">
-                        Edit
-                      </button>
-                    </Link>
-                    <Link to={`/blogs/delete/${blog.id}`}>
-                      <button className="px-4 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold border border-gray-300 shadow-sm">
-                        Delete
-                      </button>
-                    </Link>
-                  </div>
-                )}
-              </div>
-              <p className="text-gray-700 mb-2">{blog.content}</p>
-                {blog.image_path && (
-                  <div className="mb-2">
-                    <img
-                      src={`https://hhlbfsrrjopwzmzmeltr.supabase.co/storage/v1/object/public/post-files/${blog.image_path}`}
-                      alt=""
-                      className="w-full max-h-[300px] object-contain rounded-lg border bg-gray-50"
-                    />
-                  </div>
-                )}
-              <div className="flex justify-between items-center text-xs text-gray-400">
-                <span>By: {blog.email}</span>
-                <span>
-                  Created: {new Date(blog.created_at).toLocaleString()}
-                </span>
-              </div>
-            </div>
+            <BlogCard key={blog.id || `temp-${index}`} blog={blog} user={user} />
           ))}
         </div>
         {totalPages > 1 && (
@@ -271,6 +239,77 @@ const Blogs: React.FC = () => {
         )}
       </div>
     </>
+  );
+};
+
+// Separate BlogCard component to use the selector properly
+const BlogCard: React.FC<{ blog: any; user: any }> = ({ blog, user }) => {
+  const commentCount = useSelector((state: RootState) => 
+    selectCommentCountByPost(state, blog.id)
+  );
+
+  return (
+    <div className="bg-white rounded-xl shadow-md p-6 flex flex-col gap-2 transition hover:shadow-lg">
+      <div className="flex gap-2">
+        <Link
+          to={`/blogs/${blog.id}`}
+          className="px-4 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition font-semibold border border-blue-300 shadow-sm"
+        >
+          View
+        </Link>
+      </div>
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-xl font-bold text-blue-800">{blog.title}</h2>
+        {/* Only show edit/delete buttons if user is the author */}
+        {blog.user_id === user?.id && (
+          <div className="flex gap-2">
+            <Link to={`/blogs/update/${blog.id}`}>
+              <button className="px-4 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition font-semibold border border-blue-300 shadow-sm">
+                Edit
+              </button>
+            </Link>
+            <Link to={`/blogs/delete/${blog.id}`}>
+              <button className="px-4 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold border border-gray-300 shadow-sm">
+                Delete
+              </button>
+            </Link>
+          </div>
+        )}
+      </div>
+      <p className="text-gray-700 mb-2">{blog.content}</p>
+      {blog.image_path && (
+        <div className="mb-2">
+          <img
+            src={`https://hhlbfsrrjopwzmzmeltr.supabase.co/storage/v1/object/public/post-files/${blog.image_path}`}
+            alt=""
+            className="w-full max-h-[300px] object-contain rounded-lg border bg-gray-50"
+          />
+        </div>
+      )}
+      <div className="flex justify-between items-center text-xs text-gray-400">
+        <span>By: {blog.email}</span>
+        <div className="flex items-center gap-4">
+          <span>Created: {new Date(blog.created_at).toLocaleString()}</span>
+          {/* Comment Count Display */}
+          <div className="flex items-center gap-1 text-gray-600">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+            <span className="font-medium">{commentCount}</span>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

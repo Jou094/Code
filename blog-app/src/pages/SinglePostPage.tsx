@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useAppSelector } from '../app/hooks'
 import { selectBlogById } from '../app/blogSlice'
+import Comments from '../components/Comments'
 
 export default function SinglePostPage() {
   const { id } = useParams<{ id: string }>()
@@ -21,9 +22,8 @@ export default function SinglePostPage() {
         By {post.email} •{' '}
         {new Date(post.created_at).toLocaleDateString()}
       </p>
-      
       <p className="whitespace-pre-line">{post.content}</p>
-
+      <Comments postId={id!} />
     </div>
   )
 }

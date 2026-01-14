@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import type { Blog } from "../app/blogSlice";
+import Comments from "../components/Comments";
 
 const BlogDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -42,6 +43,7 @@ const BlogDetails: React.FC = () => {
     }
   }, [blog]);
 
+
   if (loading) return <div className="text-center mt-8">Loading...</div>;
   if (error)
     return <div className="text-center text-red-500 mt-8">{error}</div>;
@@ -70,6 +72,7 @@ const BlogDetails: React.FC = () => {
           Created: {new Date(blog.created_at).toLocaleString()}
         </div>
       </div>
+      <Comments postId={id!} />
     </div>
   );
 };
